@@ -1,0 +1,591 @@
+openapi: 3.0.0
+info:
+  title: SwiftEats API
+  version: 1.0.0
+  description: API specification for the SwiftEats food delivery platform
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  # Restaurant Service Endpoints
+  /api/restaurants:
+    get:
+      summary: Get all restaurants
+      description: Retrieves a list of all available restaurants
+      operationId: getAllRestaurants
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantPagedResponse'
+        '500':
+          description: Internal server error
+  
+  /api/restaurants/{id}:
+    get:
+      summary: Get restaurant by ID
+      description: Retrieves a restaurant by its ID
+      operationId: getRestaurantById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restaurant'
+        '404':
+          description: Restaurant not found
+        '500':
+          description: Internal server error
+  
+  /api/restaurants/{id}/menu:
+    get:
+      summary: Get restaurant menu
+      description: Retrieves the menu for a specific restaurant
+      operationId: getRestaurantMenu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuItem'
+        '404':
+          description: Restaurant not found
+        '500':
+          description: Internal server error
+
+  # Order Service Endpoints
+  /api/orders:
+    post:
+      summary: Create a new order
+      description: Places a new food order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+    
+    get:
+      summary: Get user orders
+      description: Retrieves all orders for a user
+      operationId: getUserOrders
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPagedResponse'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+  
+  /api/orders/{id}:
+    get:
+      summary: Get order by ID
+      description: Retrieves an order by its ID
+      operationId: getOrderById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '500':
+          description: Internal server error
+  
+  /api/orders/{id}/status:
+    put:
+      summary: Update order status
+      description: Updates the status of an existing order
+      operationId: updateOrderStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, ACCEPTED, PREPARING, READY, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+        '400':
+          description: Invalid status
+        '500':
+          description: Internal server error
+
+  # Driver Service Endpoints
+  /api/v1/drivers:
+    get:
+      summary: Get all drivers
+      description: Retrieves a list of all available drivers
+      operationId: getAllDrivers
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverPagedResponse'
+        '500':
+          description: Internal server error
+  
+  /api/v1/drivers/{id}:
+    get:
+      summary: Get driver by ID
+      description: Retrieves a driver by their ID
+      operationId: getDriverById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '404':
+          description: Driver not found
+        '500':
+          description: Internal server error
+  
+  /api/v1/drivers/{id}/location:
+    get:
+      summary: Get driver's current location
+      description: Retrieves the current location of a driver
+      operationId: getDriverLocation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLocation'
+        '404':
+          description: Driver not found
+        '500':
+          description: Internal server error
+    
+    put:
+      summary: Update driver location
+      description: Updates the current location of a driver
+      operationId: updateDriverLocation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdateRequest'
+      responses:
+        '200':
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLocation'
+        '404':
+          description: Driver not found
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+
+  /api/v1/drivers/location:
+    post:
+      summary: Update driver location
+      description: Updates the current location of a driver using the driver ID in the request body
+      operationId: updateDriverLocationByDriverId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: integer
+                  format: int64
+                  description: ID of the driver
+                latitude:
+                  type: number
+                  format: double
+                  description: Latitude coordinate
+                longitude:
+                  type: number
+                  format: double
+                  description: Longitude coordinate
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: Timestamp of the location update
+              required:
+                - driverId
+                - latitude
+                - longitude
+                - timestamp
+      responses:
+        '200':
+          description: Location updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverLocation'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
+  
+  /api/orders/{id}/track:
+    get:
+      summary: Track order delivery
+      description: Retrieves the real-time location of the driver assigned to an order
+      operationId: trackOrderDelivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTracking'
+        '404':
+          description: Order not found or no driver assigned
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        cuisine:
+          type: string
+        rating:
+          type: number
+          format: float
+        openingTime:
+          type: string
+          format: time
+        closingTime:
+          type: string
+          format: time
+        isOpen:
+          type: boolean
+    
+    RestaurantPagedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Restaurant'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+    
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        category:
+          type: string
+        imageUrl:
+          type: string
+        isAvailable:
+          type: boolean
+    
+    OrderRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        restaurantId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        deliveryAddress:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, WALLET, CASH_ON_DELIVERY]
+    
+    OrderItem:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        specialInstructions:
+          type: string
+    
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        restaurantId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        deliveryAddress:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, ACCEPTED, PREPARING, READY, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+        totalAmount:
+          type: number
+          format: double
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, WALLET, CASH_ON_DELIVERY]
+        paymentStatus:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+        createdAt:
+          type: string
+          format: date-time
+        estimatedDeliveryTime:
+          type: string
+          format: date-time
+        driverId:
+          type: string
+    
+    OrderPagedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+    
+    Driver:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        vehicleNumber:
+          type: string
+        phoneNumber:
+          type: string
+        rating:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [AVAILABLE, BUSY, OFFLINE]
+    
+    DriverPagedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Driver'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+    
+    DriverLocation:
+      type: object
+      properties:
+        driverId:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
+    
+    LocationUpdateRequest:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+    
+    OrderTracking:
+      type: object
+      properties:
+        orderId:
+          type: string
+        driverId:
+          type: string
+        driverName:
+          type: string
+        driverPhone:
+          type: string
+        vehicleNumber:
+          type: string
+        currentLocation:
+          $ref: '#/components/schemas/DriverLocation'
+        orderStatus:
+          type: string
+          enum: [PENDING, ACCEPTED, PREPARING, READY, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+        estimatedDeliveryTime:
+          type: string
+          format: date-time
